@@ -91,22 +91,27 @@ export default function PageComponent({ ordersWithProducts }: Props) {
     setSelectedProducts(products);
   };
 
-  const handleOutOfStockToggle = async (productId: number) => {
-    try {
-      // Toggle out of stock status
-      const updated = new Set(outOfStockProducts);
-      if (updated.has(productId)) {
-        updated.delete(productId);
-        // Update the product status to in stock in Supabase
-        await updateProductStatus(productId, 'in_stock');
-      } else {
-        updated.add(productId);
-        // Update the product status to out of stock in Supabase
-        await updateProductStatus(productId, 'out_of_stock');
+  const handleOutOfStockToggle = async (productId: number, orderStatus: string) => {
+    // Disable stock status toggle for orders that are not 'pending'
+    if (orderStatus === 'pending') {
+      try {
+        // Toggle out of stock status
+        const updated = new Set(outOfStockProducts);
+        if (updated.has(productId)) {
+          updated.delete(productId);
+          // Update the product status to in stock in Supabase
+          await updateProductStatus(productId, 'in_stock');
+        } else {
+          updated.add(productId);
+          // Update the product status to out of stock in Supabase
+          await updateProductStatus(productId, 'out_of_stock');
+        }
+        setOutOfStockProducts(updated);
+      } catch (error) {
+        console.error('Error updating product status:', error);
       }
-      setOutOfStockProducts(updated);
-    } catch (error) {
-      console.error('Error updating product status:', error);
+    } else {
+      console.log('Stock status cannot be changed for completed or non-pending orders.');
     }
   };
 
@@ -114,7 +119,7 @@ export default function PageComponent({ ordersWithProducts }: Props) {
     try {
       const { error } = await supabase
         .from('product')
-        .update({ status: Status })
+        .update({ Status: Status })
         .eq('id', productId);
       
       if (error) {
@@ -296,26 +301,25 @@ export default function PageComponent({ ordersWithProducts }: Props) {
                             />
                             <div className="flex flex-col">
                               <span className="font-semibold">{product.title}</span>
-                              <span className="text-gray-600 text-sm">{product.price}$</span>
-                              <div className="flex items-center">
-                                <Button
-                                  onClick={() => handleOutOfStockToggle(product.id)}
-                                  variant="outline"
-                                  className="mt-2"
-                                >
-                                  {outOfStockProducts.has(product.id)
-                                    ? 'Mark as In Stock'
-                                    : 'Mark as Out of Stock'}
-                                </Button>
-                              </div>
+                              <span className="text-sm text-gray-600">{product.price}</span>
                             </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOutOfStockToggle(product.id, order.status)}
+                              disabled={order.status !== 'pending'}
+                            >
+                              {outOfStockProducts.has(product.id)
+                                ? 'Mark In Stock'
+                                : 'Mark Out of Stock'}
+                            </Button>
                           </div>
                         ))}
                       </div>
                     </DialogContent>
                   </Dialog>
                 </TableCell>
-                <TableCell>${refundedFunds.toFixed(2) || '0.00'}</TableCell>
+                <TableCell>${refundedFunds.toFixed(2)}</TableCell>
               </TableRow>
             );
           })}
