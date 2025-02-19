@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import Image from 'next/image';
@@ -28,6 +27,13 @@ import {
 } from '@/components/ui/dialog';
 import { OrdersWithProducts } from '@/app/admin/orders/types';
 import { updateOrderStatus } from '@/actions/orders';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize the Supabase client with environment variables
+const supabaseUrl = 'https://nlwtuqszbnuvrmhjcbcp.supabase.co';
+const supabaseKey =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sd3R1cXN6Ym51dnJtaGpjYmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyMjg1MzcsImV4cCI6MjA0NzgwNDUzN30.EVnrm6YinT_uhTHuF5CAOmhVN9t6doWw6bYPxax6WzI';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const statusOptions: string[] = ['pending', 'Shipped', 'inTransit', 'completed'];
 
@@ -53,39 +59,81 @@ type OrderedProduct = {
 type OrderedProducts = OrderedProduct[];
 
 export default function PageComponent({ ordersWithProducts }: Props) {
+  const [orders, setOrders] = useState(ordersWithProducts);
   const [selectedProducts, setSelectedProducts] = useState<OrderedProducts>([]);
   const [outOfStockProducts, setOutOfStockProducts] = useState<Set<number>>(new Set());
-  const [orders, setOrders] = useState(ordersWithProducts); // Local state for orders
+
+  // Fetch out-of-stock status from the database on component mount
+  useEffect(() => {
+    const fetchOutOfStockStatus = async () => {
+      try {
+        // Fetch all products marked as out of stock
+        const { data, error } = await supabase
+          .from('product')
+          .select('id')
+          .eq('Status', 'out_of_stock');
+
+        if (error) {
+          console.error('Error fetching out of stock products:', error.message);
+        } else {
+          const outOfStockSet = new Set(data.map((product: { id: number }) => product.id));
+          setOutOfStockProducts(outOfStockSet);
+        }
+      } catch (error) {
+        console.error('Error fetching out of stock products:', error);
+      }
+    };
+
+    fetchOutOfStockStatus();
+  }, []);
 
   const openProductsModal = (products: OrderedProducts) => () => {
     setSelectedProducts(products);
   };
 
-  const handleOutOfStockToggle = (productId: number) => {
-    setOutOfStockProducts((prev) => {
-      const updatedOutOfStock = new Set(prev);
-      if (updatedOutOfStock.has(productId)) {
-        updatedOutOfStock.delete(productId);
+  const handleOutOfStockToggle = async (productId: number) => {
+    try {
+      // Toggle out of stock status
+      const updated = new Set(outOfStockProducts);
+      if (updated.has(productId)) {
+        updated.delete(productId);
+        // Update the product status to in stock in Supabase
+        await updateProductStatus(productId, 'in_stock');
       } else {
-        updatedOutOfStock.add(productId);
+        updated.add(productId);
+        // Update the product status to out of stock in Supabase
+        await updateProductStatus(productId, 'out_of_stock');
       }
-      return updatedOutOfStock;
-    });
+      setOutOfStockProducts(updated);
+    } catch (error) {
+      console.error('Error updating product status:', error);
+    }
   };
 
-  const orderedProducts: OrderedProducts = orders.flatMap(order =>
-    order.order_items.map(item => ({
-      order_id: order.id,
-      product: item.product,
-    }))
-  );
+  const updateProductStatus = async (productId: number, Status: string) => {
+    try {
+      const { error } = await supabase
+        .from('product')
+        .update({ status: Status })
+        .eq('id', productId);
+      
+      if (error) {
+        console.error(`Error updating product status for ${productId}:`, error.message);
+      } else {
+        console.log(`Product ${productId} status updated to ${Status}`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error updating product status for ${productId}:`, error.message);
+      } else {
+        console.error('An unknown error occurred');
+      }
+    }
+  };
 
   const handleStatusChange = async (orderId: number, status: string) => {
     try {
-      // Update the order status using the API
       await updateOrderStatus(orderId, status);
-
-      // Update the local state of the order status
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
           order.id === orderId ? { ...order, status } : order
@@ -96,8 +144,63 @@ export default function PageComponent({ ordersWithProducts }: Props) {
     }
   };
 
+  const updateOrderAmounts = async (
+    orderId: number,
+    refundedAmount: number,
+    totalPrice: number
+  ) => {
+    try {
+      const { data, error } = await supabase
+        .from('order') // Ensure this table name is correct.
+        .update({ refunded_amount: refundedAmount, totalPrice: totalPrice })
+        .eq('id', orderId);
+      if (error) {
+        console.error(`Error updating order ${orderId}:`, error.message);
+      } else {
+        console.log(`Order ${orderId} updated:`, data);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error updating order ${orderId}:`, error.message);
+      } else {
+        console.error('An unknown error occurred');
+      }
+    }
+  };
+
   useEffect(() => {
-    // Recalculate refunded funds, remaining products, and adjusted total price when outOfStockProducts changes
+    const updateOrdersInDB = async () => {
+      setOrders((prevOrders) => {
+        return prevOrders.map((order) => {
+          const products = order.order_items.map((item) => item.product);
+          const refundedFunds = products.reduce((total, product) => {
+            return outOfStockProducts.has(product.id)
+              ? total + product.price
+              : total;
+          }, 0);
+          const adjustedTotalPrice = products.reduce((total, product) => {
+            return outOfStockProducts.has(product.id)
+              ? total
+              : total + product.price;
+          }, 0);
+
+          if (
+            order.refunded_amount !== refundedFunds ||
+            order.totalPrice !== adjustedTotalPrice
+          ) {
+            updateOrderAmounts(order.id, refundedFunds, adjustedTotalPrice);
+            return {
+              ...order,
+              refunded_amount: refundedFunds,
+              totalPrice: adjustedTotalPrice,
+            };
+          }
+          return order;
+        });
+      });
+    };
+
+    updateOrdersInDB();
   }, [outOfStockProducts]);
 
   return (
@@ -115,25 +218,25 @@ export default function PageComponent({ ordersWithProducts }: Props) {
             <TableHead>Total Price</TableHead>
             <TableHead>Products</TableHead>
             <TableHead>Actions</TableHead>
-            <TableHead>Refunded Funds</TableHead>
+            <TableHead>Refunded Amount</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {orders.map((order) => {
-            const filteredProducts = orderedProducts.filter(item => item.order_id === order.id);
-            
-            // Calculate refunded funds and remaining products based on outOfStockProducts
+            const filteredProducts = order.order_items.map((item) => ({
+              order_id: order.id,
+              product: item.product,
+            }));
+
             const refundedFunds = filteredProducts.reduce((total, { product }) => {
-              return outOfStockProducts.has(product.id) ? total + product.price : total;
+              return outOfStockProducts.has(product.id)
+                ? total + product.price
+                : total;
             }, 0);
 
-            // Calculate remaining products by filtering out the outOfStock products
-            const remainingProducts = filteredProducts.filter(item => !outOfStockProducts.has(item.product.id)).length;
-
-            // Adjusted total price reflects the removal of out-of-stock products' prices
-            const adjustedTotalPrice = filteredProducts.reduce((total, { product }) => {
-              return outOfStockProducts.has(product.id) ? total : total + product.price;
-            }, 0);
+            const remainingProducts = filteredProducts.filter(
+              (item) => !outOfStockProducts.has(item.product.id)
+            ).length;
 
             return (
               <TableRow key={order.id}>
@@ -157,13 +260,12 @@ export default function PageComponent({ ordersWithProducts }: Props) {
                   </Select>
                 </TableCell>
                 <TableCell>{order.description || 'no Description'}</TableCell>
-                <TableCell>{order.user.email}</TableCell>
+                <TableCell>{order.user ? order.user.email : 'No Email'}</TableCell>
                 <TableCell>{order.slug}</TableCell>
+                <TableCell>${order.totalPrice?.toFixed(2) || '0.00'}</TableCell>
                 <TableCell>
-                  {/* Adjusted Total Price reflecting out-of-stock adjustments */}
-                  ${adjustedTotalPrice.toFixed(2)}
+                  {remainingProducts} item{remainingProducts > 1 ? 's' : ''}
                 </TableCell>
-                <TableCell>{remainingProducts} item{remainingProducts > 1 ? 's' : ''}</TableCell>
                 <TableCell>
                   <Dialog>
                     <DialogTrigger asChild>
@@ -179,10 +281,12 @@ export default function PageComponent({ ordersWithProducts }: Props) {
                       <DialogHeader>
                         <DialogTitle>Order Products</DialogTitle>
                       </DialogHeader>
-
                       <div className="mt-4">
                         {selectedProducts.map(({ product }, index) => (
-                          <div key={index} className="mr-2 mb-2 flex items-center space-x-2">
+                          <div
+                            key={index}
+                            className="mr-2 mb-2 flex items-center space-x-2"
+                          >
                             <Image
                               className="w-16 h-16 object-cover rounded"
                               src={product.heroImage}
@@ -192,30 +296,26 @@ export default function PageComponent({ ordersWithProducts }: Props) {
                             />
                             <div className="flex flex-col">
                               <span className="font-semibold">{product.title}</span>
-                              <span className="text-gray-600">${product.price.toFixed(2)}</span>
-                              <span className="text-gray-500">Available Quantity: {product.maxQuantity}</span>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleOutOfStockToggle(product.id)}
-                              >
-                                {outOfStockProducts.has(product.id) ? 'Mark as In Stock' : 'Mark as Out of Stock'}
-                              </Button>
+                              <span className="text-gray-600 text-sm">{product.price}$</span>
+                              <div className="flex items-center">
+                                <Button
+                                  onClick={() => handleOutOfStockToggle(product.id)}
+                                  variant="outline"
+                                  className="mt-2"
+                                >
+                                  {outOfStockProducts.has(product.id)
+                                    ? 'Mark as In Stock'
+                                    : 'Mark as Out of Stock'}
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         ))}
                       </div>
-
-                      <div className="mt-4">
-                        <strong>Total Refunded Funds:</strong> ${refundedFunds.toFixed(2)}
-                      </div>
                     </DialogContent>
                   </Dialog>
                 </TableCell>
-                <TableCell>
-                  {/* Read-only Refunded Funds */}
-                  ${refundedFunds.toFixed(2)}
-                </TableCell>
+                <TableCell>${refundedFunds.toFixed(2) || '0.00'}</TableCell>
               </TableRow>
             );
           })}

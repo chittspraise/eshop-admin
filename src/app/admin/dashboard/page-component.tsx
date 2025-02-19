@@ -34,7 +34,8 @@ import {
 type MonthlyOrderData = {
     name: string;   
     orders:number;
-
+    total_price: number;
+    refunded_amount: number;
 };
 
 type CategoryData = {
@@ -45,7 +46,6 @@ type CategoryData = {
     monthlyOrders,
     categoryData,
     latestUsers,
-
  }: {
     categoryData:  CategoryData[];
     monthlyOrders: MonthlyOrderData[]; 
@@ -71,6 +71,8 @@ type CategoryData = {
                     <Tooltip />
                     <Legend />
                     <Bar dataKey="orders" fill="#8884d8" />
+                    <Bar dataKey="total_price" fill="#82ca9d" />
+                    <Bar dataKey="refunded_amount" fill="#ff0000" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -87,7 +89,6 @@ type CategoryData = {
                     <Pie
                       data={categoryData}
                       dataKey="products"
-                      
                       cx="50%"
                       cy="50%"
                       outerRadius={100}

@@ -1,6 +1,7 @@
 import { getOrdersWithProducts } from '@/actions/orders';
 import PageComponent from '@/app/admin/orders/page-component';
 
+
 const Orders=async()=>{
 
     const ordersWithProducts=await getOrdersWithProducts()
