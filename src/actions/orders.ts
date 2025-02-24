@@ -11,6 +11,8 @@ export const getOrdersWithProducts = async () => {
     .select('*, order_items:order_item(*, product(*)), user(*)')
     .order('created_at', { ascending: false });
 
+    
+
   if (error) throw new Error(error.message);
 
   return data;

@@ -71,7 +71,7 @@ export default function PageComponent({ ordersWithProducts }: Props) {
         const { data, error } = await supabase
           .from('product')
           .select('id')
-          .eq('Status', 'out_of_stock');
+          .eq('Status', 'out of stock');
 
         if (error) {
           console.error('Error fetching out of stock products:', error.message);
@@ -100,11 +100,11 @@ export default function PageComponent({ ordersWithProducts }: Props) {
         if (updated.has(productId)) {
           updated.delete(productId);
           // Update the product status to in stock in Supabase
-          await updateProductStatus(productId, 'in_stock');
+          await updateProductStatus(productId, 'in stock');
         } else {
           updated.add(productId);
           // Update the product status to out of stock in Supabase
-          await updateProductStatus(productId, 'out_of_stock');
+          await updateProductStatus(productId, 'out of stock');
         }
         setOutOfStockProducts(updated);
       } catch (error) {
@@ -227,103 +227,118 @@ export default function PageComponent({ ordersWithProducts }: Props) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {orders.map((order) => {
-            const filteredProducts = order.order_items.map((item) => ({
-              order_id: order.id,
-              product: item.product,
-            }));
+  {orders.map((order) => {
+    const filteredProducts = order.order_items.flatMap((item) => {
+      // Create multiple entries for each quantity of the product
+      return Array.from({ length: item.quantity }, () => ({
+        order_id: order.id,
+        product: item.product,
+      }));
+    });
 
-            const refundedFunds = filteredProducts.reduce((total, { product }) => {
-              return outOfStockProducts.has(product.id)
-                ? total + product.price
-                : total;
-            }, 0);
+    // Recalculate refunded funds and total price based on out-of-stock status
+    const refundedFunds = filteredProducts.reduce((total, { product }) => {
+      // If product is out of stock, add its price to refunded funds
+      if (outOfStockProducts.has(product.id)) {
+        return total + product.price;
+      }
+      return total;
+    }, 0);
 
-            const remainingProducts = filteredProducts.filter(
-              (item) => !outOfStockProducts.has(item.product.id)
-            ).length;
+    const remainingProducts = filteredProducts.filter(
+      (item) => !outOfStockProducts.has(item.product.id)
+    ).length;
 
-            return (
-              <TableRow key={order.id}>
-                <TableCell>{order.id}</TableCell>
-                <TableCell>{format(new Date(order.created_at), 'dd-MM-yyyy')}</TableCell>
-                <TableCell>
-                  <Select
-                    onValueChange={(value) => handleStatusChange(order.id, value)}
-                    defaultValue={order.status}
+    const totalPrice = filteredProducts.reduce((total, { product }) => {
+      // Recalculate the total price based on stock availability
+      if (!outOfStockProducts.has(product.id)) {
+        return total + product.price;
+      }
+      return total;
+    }, 0);
+
+    return (
+      <TableRow key={order.id}>
+        <TableCell>{order.id}</TableCell>
+        <TableCell>{format(new Date(order.created_at), 'dd-MM-yyyy')}</TableCell>
+        <TableCell>
+          <Select
+            onValueChange={(value) => handleStatusChange(order.id, value)}
+            defaultValue={order.status}
+          >
+            <SelectTrigger className="w-[120px]">
+              <SelectValue>{order.status}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </TableCell>
+        <TableCell>{order.description || 'no Description'}</TableCell>
+        <TableCell>{order.user ? order.user.email : 'No Email'}</TableCell>
+        <TableCell>{order.slug}</TableCell>
+        <TableCell>${totalPrice.toFixed(2) || '0.00'}</TableCell>
+        <TableCell>
+          {remainingProducts} item{remainingProducts > 1 ? 's' : ''}
+        </TableCell>
+        <TableCell>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openProductsModal(filteredProducts)}
+              >
+                View Products
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Order Products</DialogTitle>
+              </DialogHeader>
+              <div className="mt-4">
+                {selectedProducts.map(({ product }, index) => (
+                  <div
+                    key={index}
+                    className="mr-2 mb-2 flex items-center space-x-2"
                   >
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue>{order.status}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell>{order.description || 'no Description'}</TableCell>
-                <TableCell>{order.user ? order.user.email : 'No Email'}</TableCell>
-                <TableCell>{order.slug}</TableCell>
-                <TableCell>${order.totalPrice?.toFixed(2) || '0.00'}</TableCell>
-                <TableCell>
-                  {remainingProducts} item{remainingProducts > 1 ? 's' : ''}
-                </TableCell>
-                <TableCell>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={openProductsModal(filteredProducts)}
-                      >
-                        View Products
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Order Products</DialogTitle>
-                      </DialogHeader>
-                      <div className="mt-4">
-                        {selectedProducts.map(({ product }, index) => (
-                          <div
-                            key={index}
-                            className="mr-2 mb-2 flex items-center space-x-2"
-                          >
-                            <Image
-                              className="w-16 h-16 object-cover rounded"
-                              src={product.heroImage}
-                              alt={product.title}
-                              width={64}
-                              height={64}
-                            />
-                            <div className="flex flex-col">
-                              <span className="font-semibold">{product.title}</span>
-                              <span className="text-sm text-gray-600">{product.price}</span>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleOutOfStockToggle(product.id, order.status)}
-                              disabled={order.status !== 'pending'}
-                            >
-                              {outOfStockProducts.has(product.id)
-                                ? 'Mark In Stock'
-                                : 'Mark Out of Stock'}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </TableCell>
-                <TableCell>${refundedFunds.toFixed(2)}</TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
+                    <Image
+                      className="w-16 h-16 object-cover rounded"
+                      src={product.heroImage}
+                      alt={product.title}
+                      width={64}
+                      height={64}
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-semibold">{product.title}</span>
+                      <span className="text-sm text-gray-600">{product.price}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOutOfStockToggle(product.id, order.status)}
+                      disabled={order.status !== 'pending'}
+                    >
+                      {outOfStockProducts.has(product.id)
+                        ? 'Mark In Stock'
+                        : 'Mark Out of Stock'}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </TableCell>
+        <TableCell>${refundedFunds.toFixed(2)}</TableCell>
+      </TableRow>
+    );
+  })}
+</TableBody>
+
       </Table>
     </div>
   );
