@@ -281,7 +281,7 @@ export default function PageComponent({ ordersWithProducts }: Props) {
         <TableCell>{order.description || 'no Description'}</TableCell>
         <TableCell>{order.user ? order.user.email : 'No Email'}</TableCell>
         <TableCell>{order.slug}</TableCell>
-        <TableCell>${totalPrice.toFixed(2) || '0.00'}</TableCell>
+        <TableCell>R{totalPrice.toFixed(2) || '0.00'}</TableCell>
         <TableCell>
           {remainingProducts} item{remainingProducts > 1 ? 's' : ''}
         </TableCell>
@@ -333,7 +333,7 @@ export default function PageComponent({ ordersWithProducts }: Props) {
             </DialogContent>
           </Dialog>
         </TableCell>
-        <TableCell>${refundedFunds.toFixed(2)}</TableCell>
+        <TableCell>R{refundedFunds.toFixed(2)}</TableCell>
       </TableRow>
     );
   })}
