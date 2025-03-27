@@ -5,8 +5,8 @@ export type ProductWithCategory = {
   created_at: string;
   heroImage: string;
   id: number;
+  description: string;
   imagesUrl: string[];
-  maxQuantity: number;
   price: number | null;
   slug: string;
   title: string;
@@ -18,7 +18,7 @@ export type UpdateProductSchema = {
   category: number;
   heroImage: string;
   imagesUrl: string[];
-  maxQuantity: number;
+  description: string;
   price: number;
   slug: string;
   title: string;

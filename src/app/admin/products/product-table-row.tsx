@@ -27,7 +27,7 @@ export const ProductTableRow = ({
       title: product.title,
       category: product.category,
       price: product.price,
-      maxQuantity: product.maxQuantity,
+      description: product.description, // Added description
       heroImage: product.heroImage,
       images: product.images,
       slug: product.slug,
@@ -41,57 +41,57 @@ export const ProductTableRow = ({
       <TableCell>{product.title}</TableCell>
       <TableCell>{product.category.name}</TableCell>
       <TableCell>{product.price}</TableCell>
-      <TableCell>{product.maxQuantity}</TableCell>
+      <TableCell>{product.description}</TableCell> {/* Display description */}
       <TableCell>
         {product.heroImage && (
           <Image
             width={40}
             height={40}
             src={product.heroImage}
-            alt='Hero'
-            className='w-10 h-10 object-cover'
+            alt="Hero"
+            className="w-10 h-10 object-cover"
           />
         )}
       </TableCell>
       <TableCell>
-  {product.imagesUrl && product.imagesUrl.map((url, index) => (
-    <Image
-      key={index}
-      width={40}
-      height={40}
-      src={url}
-      alt={`Product image ${index + 1}`}
-    />
-  ))}
-</TableCell>
-
+        {product.imagesUrl &&
+          product.imagesUrl.map((url, index) => (
+            <Image
+              key={index}
+              width={40}
+              height={40}
+              src={url}
+              alt={`Product image ${index + 1}`}
+            />
+          ))}
+      </TableCell>
       <TableCell>
         <Button
-          variant='ghost'
-          size='icon'
+          variant="ghost"
+          size="icon"
           onClick={() =>
             handleEditClick({
               title: product.title,
               category: product.category.id.toString(),
               price: product.price?.toString() ?? '',
-              maxQuantity: product.maxQuantity?.toString() ?? '',
+              description: product.description ?? '', // Include description
               images: [],
               slug: product.slug,
               intent: 'update',
             })
           }
         >
-          <Pencil className='h-4 w-4' />
+          <Pencil className="h-4 w-4" />
         </Button>
         <Button
-          variant='ghost'
-          size='icon'
+          variant="ghost"
+          size="icon"
           onClick={() => {
             setCurrentProduct({
               title: product.title,
               category: product.category.id.toString(),
               price: product.price?.toString() ?? '',
-              maxQuantity: product.maxQuantity?.toString() ?? '',
+              description: product.description ?? '', // Include description
               images: [],
               slug: product.slug,
               intent: 'update',
@@ -99,7 +99,7 @@ export const ProductTableRow = ({
             setIsDeleteModalOpen(true);
           }}
         >
-          <Trash2 className='h-4 w-4' />
+          <Trash2 className="h-4 w-4" />
         </Button>
       </TableCell>
     </TableRow>

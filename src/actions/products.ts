@@ -30,8 +30,8 @@ export const createProduct = async ({
   category,
   heroImage,
   images,
-  maxQuantity,
   price,
+  description, // Added description field
   title,
 }: CreateProductSchemaServer) => {
   const supabase = await createClient();
@@ -41,8 +41,8 @@ export const createProduct = async ({
     category,
     heroImage,
     imagesUrl: images,
-    maxQuantity,
     price,
+    description, // Include description field
     slug,
     title,
   });
@@ -60,8 +60,8 @@ export const updateProduct = async ({
   category,
   heroImage,
   imagesUrl,
-  maxQuantity,
   price,
+  description, // Added description field
   slug,
   title,
 }: UpdateProductSchema) => {
@@ -72,8 +72,8 @@ export const updateProduct = async ({
       category,
       heroImage,
       imagesUrl,
-      maxQuantity,
       price,
+      description, // Include description field
       title,
     })
     .match({ slug });

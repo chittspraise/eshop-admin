@@ -25,8 +25,10 @@ import {
 } from '@/components/ui/dialog';
 import { CreateOrUpdateProductSchema } from '@/app/admin/products/schema';
 import { Input } from '@/components/ui/input';
+
 import { Category } from '@/app/admin/categories/categories.types';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 type Props = {
   form: UseFormReturn<CreateOrUpdateProductSchema>;
@@ -55,7 +57,7 @@ export const ProductForm = ({
         title: '',
         category: '',
         price: '',
-        maxQuantity: '',
+        description:'',
         heroImage: undefined,
         images: undefined,
       });
@@ -148,24 +150,24 @@ export const ProductForm = ({
                 )}
               />
               <FormField
-                control={form.control}
-                name='maxQuantity'
-                render={({ field }) => (
-                  <FormItem className='flex flex-col'>
-                    <FormLabel>Max Quantity</FormLabel>
-                    <FormControl>
-                      <Input
-                        id='maxQuantity'
-                        type='number'
-                        className='col-span-3'
-                        {...field}
-                        disabled={isSubmitting}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+  control={form.control}
+  name="description"
+  render={({ field }) => (
+    <FormItem className="flex flex-col">
+      <FormLabel>Description</FormLabel>
+      <FormControl>
+        <Textarea
+          placeholder="Enter product description"
+          {...field}
+          className="col-span-3"
+          disabled={isSubmitting}
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
               <FormField
                 control={form.control}
                 name='heroImage'

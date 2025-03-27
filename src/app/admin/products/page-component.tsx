@@ -58,7 +58,7 @@ export const ProductPageComponent: FC<Props> = ({
       title: '',
       category: undefined,
       price: undefined,
-      maxQuantity: undefined,
+      description: '',
       heroImage: undefined,
       images: [],
       intent: 'create',
@@ -73,7 +73,7 @@ export const ProductPageComponent: FC<Props> = ({
     const {
       category,
       images,
-      maxQuantity,
+      description,
       price,
       title,
       heroImage,
@@ -124,7 +124,7 @@ export const ProductPageComponent: FC<Props> = ({
             category: Number(category),
             images: imageUrls,
             heroImage: heroImageUrl,
-            maxQuantity: Number(maxQuantity),
+            description,
             price: Number(price),
             title,
           });
@@ -141,7 +141,7 @@ export const ProductPageComponent: FC<Props> = ({
             category: Number(category),
             heroImage: heroImageUrl!,
            imagesUrl: imageUrls,
-            maxQuantity: Number(maxQuantity),
+           description,
             price: Number(price),
             title,
             slug,
@@ -195,7 +195,7 @@ export const ProductPageComponent: FC<Props> = ({
               <TableHead>Title</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Price</TableHead>
-              <TableHead>Max Quantity</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead>Hero Image</TableHead>
               <TableHead>Product Images</TableHead>
               <TableHead>Actions</TableHead>
