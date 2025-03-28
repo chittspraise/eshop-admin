@@ -61,7 +61,7 @@ type OrderedProducts = OrderedProduct[];
 export default function PageComponent({ ordersWithProducts }: Props) {
   const [orders, setOrders] = useState(ordersWithProducts);
   const [selectedProducts, setSelectedProducts] = useState<OrderedProducts>([]);
-  const [outOfStockProducts, setOutOfStockProducts] = useState<Set<number>>(new Set());
+  const [outOfStockProducts, setOutOfStockProducts] = useState<Set<string>>(new Set());
 
   // Fetch out-of-stock status from the database on component mount
   useEffect(() => {
@@ -91,22 +91,22 @@ export default function PageComponent({ ordersWithProducts }: Props) {
     setSelectedProducts(products);
   };
 
-  const handleOutOfStockToggle = async (productId: number, orderStatus: string) => {
-    // Disable stock status toggle for orders that are not 'pending'
+  const handleOutOfStockToggle = async (orderId: number, productId: number, orderStatus: string) => {
     if (orderStatus === 'pending') {
       try {
-        // Toggle out of stock status
+        const key = `${orderId}_${productId}`; // Unique key for each product in an order
         const updated = new Set(outOfStockProducts);
-        if (updated.has(productId)) {
-          updated.delete(productId);
-          // Update the product status to in stock in Supabase
+  
+        if (updated.has(key)) {
+          updated.delete(key);
           await updateProductStatus(productId, 'in stock');
         } else {
-          updated.add(productId);
-          // Update the product status to out of stock in Supabase
+          updated.add(key);
           await updateProductStatus(productId, 'out of stock');
         }
-        setOutOfStockProducts(updated);
+  
+        setOutOfStockProducts(new Set(updated)); // Update state with new Set
+  
       } catch (error) {
         console.error('Error updating product status:', error);
       }
@@ -114,7 +114,7 @@ export default function PageComponent({ ordersWithProducts }: Props) {
       console.log('Stock status cannot be changed for completed or non-pending orders.');
     }
   };
-
+  
   const updateProductStatus = async (productId: number, Status: string) => {
     try {
       const { error } = await supabase
@@ -242,7 +242,7 @@ export default function PageComponent({ ordersWithProducts }: Props) {
       if (outOfStockProducts.has(product.id)) {
         return total + product.price;
       }
-      return total;
+      return total; 
     }, 0);
 
     const remainingProducts = filteredProducts.filter(
@@ -318,15 +318,14 @@ export default function PageComponent({ ordersWithProducts }: Props) {
                       <span className="text-sm text-gray-600">{product.price}</span>
                     </div>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOutOfStockToggle(product.id, order.status)}
-                      disabled={order.status !== 'pending'}
-                    >
-                      {outOfStockProducts.has(product.id)
-                        ? 'Mark In Stock'
-                        : 'Mark Out of Stock'}
-                    </Button>
+               variant="outline"
+              size="sm"
+              onClick={() => handleOutOfStockToggle(order.id, product.id, order.status)}
+              disabled={order.status !== 'pending'}
+              >
+     {outOfStockProducts.has(`${order.id}_${product.id}`) ? 'Mark In Stock' : 'Mark Out of Stock'}
+</Button>
+
                   </div>
                 ))}
               </div>
