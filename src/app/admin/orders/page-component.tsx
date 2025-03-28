@@ -61,7 +61,7 @@ type OrderedProducts = OrderedProduct[];
 export default function PageComponent({ ordersWithProducts }: Props) {
   const [orders, setOrders] = useState(ordersWithProducts);
   const [selectedProducts, setSelectedProducts] = useState<OrderedProducts>([]);
-  const [outOfStockProducts, setOutOfStockProducts] = useState<Set<string>>(new Set());
+  const [outOfStockProducts, setOutOfStockProducts] = useState<Set<number>>(new Set());
 
   // Fetch out-of-stock status from the database on component mount
   useEffect(() => {
@@ -94,14 +94,13 @@ export default function PageComponent({ ordersWithProducts }: Props) {
   const handleOutOfStockToggle = async (orderId: number, productId: number, orderStatus: string) => {
     if (orderStatus === 'pending') {
       try {
-        const key = `${orderId}_${productId}`; // Unique key for each product in an order
         const updated = new Set(outOfStockProducts);
-  
-        if (updated.has(key)) {
-          updated.delete(key);
+
+        if (updated.has(productId)) {
+          updated.delete(productId);
           await updateProductStatus(productId, 'in stock');
         } else {
-          updated.add(key);
+          updated.add(productId);
           await updateProductStatus(productId, 'out of stock');
         }
   
@@ -323,7 +322,7 @@ export default function PageComponent({ ordersWithProducts }: Props) {
               onClick={() => handleOutOfStockToggle(order.id, product.id, order.status)}
               disabled={order.status !== 'pending'}
               >
-     {outOfStockProducts.has(`${order.id}_${product.id}`) ? 'Mark In Stock' : 'Mark Out of Stock'}
+     {outOfStockProducts.has(product.id) ? 'Mark In Stock' : 'Mark Out of Stock'}
 </Button>
 
                   </div>
