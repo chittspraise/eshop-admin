@@ -90,6 +90,13 @@ export default function Home() {
     <div className='min-h-screen'>
       <header className='container mx-auto px-4 py-6 flex justify-between items-center'>
         <h1 className='text-2xl font-bold'>eshop-App</h1>
+        <Button
+          size='sm'
+          className='bg-[#1BC464] hover:bg-[#1bc464d7]'
+          onClick={() => window.location.href = '/auth'}
+        >
+          Login
+        </Button>
       </header>
 
       <main className='container mx-auto px-4 py-12'>
@@ -115,7 +122,7 @@ export default function Home() {
             </div>
 
             <div className='w-1/3'>
-              <motion.div
+                <motion.div
                 className='relative'
                 style={{ perspective: 1000 }}
                 animate={{
@@ -126,18 +133,18 @@ export default function Home() {
                 onMouseMove={handleMouseMove}
                 onHoverStart={() => setIsHovered(true)}
                 onHoverEnd={() => setIsHovered(false)}
-              >
+                >
                 <Image
-                  width={1331}
-                  height={888}
-                  src='/WhatsApp Image 2024-12-26 at 03.39.07_273364e0.jpg'
-                  alt='GadgetApp Screenshot'
-                  className='rounded-3xl object-cover shadow-2xl mx-auto h-[500px] w-[250px]'
+                width={1331}
+                height={888}
+                src="/WhatsApp%20Image%202025-04-06%20at%2021.30.25.jpeg"
+                alt="GadgetApp Screenshot"
+                className="rounded-3xl object-cover shadow-2xl mx-auto h-[500px] w-[250px]"
                 />
                 <Badge className='absolute top-4 right-4 bg-[#1bc464] text-white'>
                   New Release
                 </Badge>
-              </motion.div>
+                </motion.div>
             </div>
           </div>
         </section>
@@ -194,7 +201,7 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
-        </section>
+        </section> 
 
         <section className='mb-24'>
           <h3 className='text-3xl font-bold mb-8 text-center'>
@@ -244,21 +251,25 @@ export default function Home() {
           </Button>
         </section>
       </main>
-
+      <style jsx global>{`
+        body {
+          background-color: white;
+          color: black;
+        }
+      `}</style>
       <footer className='bg-[#1BC464] text-white'>
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h4 className="font-bold text-xl mb-4">GadgetApp</h4>
-              <p className="text-white/80">Your one-stop shop for all things tech. Shop smarter, not harder.</p>
+              <h4 className="font-bold text-xl mb-4">GroceryApp</h4>
+              <p className="text-white/80">Your one-stop shop for all your groceries. Shop smarter, not harder.</p>
             </div>
             <div>
               <h4 className="font-bold mb-4">Quick Links</h4>
               <ul className="space-y-2">
-          <li><Link href="/about" className="text-white/80 hover:text-white">About Us</Link></li>
-          <li><Link href="/features" className="text-white/80 hover:text-white">Features</Link></li>
-          <li><Link href="/testimonials" className="text-white/80 hover:text-white">Testimonials</Link></li>
-          <li><Link href="/contact" className="text-white/80 hover:text-white">Contact</Link></li>
+          <li><Link href="/About" className="text-white/80 hover:text-white">About Us</Link></li>
+          <li><Link href="/Policy" className="text-white/80 hover:text-white">Privacy Policy</Link></li>
+          <li><Link href="/TermsAndCondition" className="text-white/80 hover:text-white">Terms and Conditions</Link></li>
               </ul>
             </div>
             <div>
@@ -279,7 +290,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-white/20 mt-8 pt-8 text-center text-white/80">
-            <p className="mb-4">© 2024 GadgetApp. All rights reserved.</p>
+            <p className="mb-4">© 2024 GroceryApp. All rights reserved.</p>
             <Link
               href={`https://github.com/chittspraise`}
               target='_blank'
