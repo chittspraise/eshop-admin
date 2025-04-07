@@ -22,7 +22,14 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "scraper.ts", "src/app/api/scraper.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "scraper.ts",
+    "src/app/api/scraper.ts",
+    "src/app/layout.tsx"
+  ],
   "exclude": ["node_modules"]
 }
-

@@ -44,7 +44,11 @@ export default function Auth() {
       await authenticate(email, password);
       router.push('/admin');
     } catch (error: Error | unknown) {
-      form.setError('root', { message: error instanceof Error ? error.message : 'Authentication failed. Please try again.' });
+      form.setError('root', { 
+      message: error instanceof Error 
+        ? error.message 
+        : 'Wrong email or password. Please try again.' 
+      });
     } finally {
       setIsAuthenticating(false);
     }
