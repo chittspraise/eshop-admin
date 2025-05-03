@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { sendNotification } from './notifications';
 
 export const getOrdersWithProducts = async () => {
-  const supabase = await createClient();
+  const supabase = await  createClient();
   const { data, error } = await supabase
     .from('order')
     .select('*, order_items:order_item(*, product(*)), user(*)')
@@ -15,9 +15,18 @@ export const getOrdersWithProducts = async () => {
 
   return data;
 };
+export const updateOrderItemStatus = async (orderItemId: number, status: string) => {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('order_item')
+    .update({ status })
+    .eq('id', orderItemId);
+
+  if (error) throw new Error(error.message);
+};
 
 export const updateOrderStatus = async (orderId: number, status: string) => {
-  const supabase = await createClient();
+  const supabase = await  createClient();
   const { error } = await supabase
     .from('order')
     .update({ status })
@@ -25,52 +34,60 @@ export const updateOrderStatus = async (orderId: number, status: string) => {
 
   if (error) throw new Error(error.message);
 
+  
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (!session?.user) {
-    throw new Error('User session is not available.');
-  }
-  const userId = session.user.id;
+  if (!session?.user?.id) throw new Error("User not logged in");
+const userId = session.user.id;
+
 
   await sendNotification(userId, status + ' 🚀');
 
   revalidatePath('/admin/orders');
 };
-
-export const updateOrderFinancials = async (
-  orderItemId: number,
-  totalPrice: number,
-  refundedAmount: number
-) => {
+export const updateFinancials= async (orderId: number, totalPrice: number,refunded_amount :number) => { 
   const supabase = await createClient();
   const { error } = await supabase
-    .from('order')
-    .update({ totalPrice, refunded_amount: refundedAmount })
-    .eq('id', orderItemId);
+    .from('order') 
+    .update({ totalPrice, refunded_amount}) 
+    .eq('id', orderId); 
 
   if (error) throw new Error(error.message);
-
-  revalidatePath('/admin/orders');
-};
+};   
 
 export const getMonthlyOrders = async () => {
-  const supabase = await createClient();
+  const supabase =  await createClient();
   const { data, error } = await supabase.from('order').select('created_at');
 
   if (error) throw new Error(error.message);
 
   const monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   const ordersByMonth = data.reduce(
     (acc: Record<string, number>, order: { created_at: string }) => {
       const date = new Date(order.created_at);
-      const month = monthNames[date.getUTCMonth()];
-      acc[month] = (acc[month] || 0) + 1;
+      const month = monthNames[date.getUTCMonth()]; // Get the month name
+
+      // Increment the count for this month
+      if (!acc[month]) acc[month] = 0;
+      acc[month]++;
+
       return acc;
     },
     {}

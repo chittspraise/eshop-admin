@@ -26,6 +26,17 @@ export const getProductsWithCategories =
     return data || [];
   };
 
+  export const updateProductStatus = async (productId: number, Status: string) => {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('product')
+      .update({ Status })
+      .eq('id', productId);
+  
+    if (error) throw new Error(error.message);
+  };
+  
+
 export const createProduct = async ({
   category,
   heroImage,
