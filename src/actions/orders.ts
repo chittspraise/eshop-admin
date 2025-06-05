@@ -53,30 +53,33 @@ export const updateOrderStatus = async (orderId: number, status: string) => {
  */
 export const updateFinancials = async (
   orderId: number,
-  totalPrice: number,
-  refunded_amount: number
+  newTotalPrice: number,
+  newRefundedAmount: number
 ) => {
   const supabase = await createClient();
 
-  // Update order totalPrice and refunded_amount
-  const { error: orderError } = await supabase
+  // Step 1: Get current order data
+  const { data: currentOrder, error: orderFetchError } = await supabase
     .from('order')
-    .update({ totalPrice, refunded_amount })
-    .eq('id', orderId);
-
-  if (orderError) throw new Error(orderError.message);
-
-  // Get user from order to update their wallet_balance
-  const { data: orderData, error: orderDataError } = await supabase
-    .from('order')
-    .select('user')
+    .select('user, refunded_amount')
     .eq('id', orderId)
     .single();
 
-  if (orderDataError) throw new Error(orderDataError.message);
-  const userId = orderData.user;
+  if (orderFetchError) throw new Error(orderFetchError.message);
 
-  // Get current wallet_balance from profile
+  const userId = currentOrder.user;
+  const oldRefundedAmount = currentOrder.refunded_amount || 0;
+  const refundDifference = newRefundedAmount - oldRefundedAmount;
+
+  // Step 2: Update order with new totals
+  const { error: orderUpdateError } = await supabase
+    .from('order')
+    .update({ totalPrice: newTotalPrice, refunded_amount: newRefundedAmount })
+    .eq('id', orderId);
+
+  if (orderUpdateError) throw new Error(orderUpdateError.message);
+
+  // Step 3: Fetch current wallet balance
   const { data: profileData, error: profileError } = await supabase
     .from('profile')
     .select('wallet_balance')
@@ -86,15 +89,15 @@ export const updateFinancials = async (
   if (profileError) throw new Error(profileError.message);
 
   const currentBalance = profileData?.wallet_balance || 0;
-  const newBalance = currentBalance + refunded_amount;
+  const newBalance = currentBalance + refundDifference;
 
-  // Update wallet_balance in profile table
-  const { error: updateWalletError } = await supabase
+  // Step 4: Update wallet balance
+  const { error: walletUpdateError } = await supabase
     .from('profile')
     .update({ wallet_balance: newBalance })
     .eq('user_id', userId);
 
-  if (updateWalletError) throw new Error(updateWalletError.message);
+  if (walletUpdateError) throw new Error(walletUpdateError.message);
 };
 
 export const getMonthlyOrders = async () => {
