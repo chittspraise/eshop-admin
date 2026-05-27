@@ -16,19 +16,19 @@ export default async function AdminLayout({
 
   const { data: authData } = await supabase.auth.getUser();
 
-  if (authData?.user) {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', authData.user.id)
-      .single();
+  if (!authData?.user) {
+    return redirect('/auth/admin');
+  }
 
-    if (error || !data) {
-      console.log('Error fetching user data', error);
-      return;
-    }
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', authData.user.id)
+    .single();
 
-    if (data.type === ADMIN) return redirect('/');
+  if (error || !data || data.type?.toUpperCase() !== ADMIN) {
+    console.log('Access denied: User is not an admin', error);
+    return redirect('/');
   }
 
   return (

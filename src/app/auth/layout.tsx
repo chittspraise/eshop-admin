@@ -12,7 +12,11 @@ export default async function AuthLayout({
 }>) {
     const supabase = await createClient();
 
-    const { data: authData } = await supabase.auth.getUser();
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+
+    if (authError && authError.message !== 'Auth session missing!') {
+        console.error('Auth error in layout:', authError.message);
+    }
 
     if(authData?.user) {
         const { data, error } = await supabase
@@ -26,7 +30,7 @@ export default async function AuthLayout({
             return;
         }
 
-        if(data.type===ADMIN) return redirect('/admin');
+        if(data.type?.toUpperCase() === ADMIN) return redirect('/admin');
     }
 
  return <>  {children} </>

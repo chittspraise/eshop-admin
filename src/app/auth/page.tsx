@@ -1,112 +1,72 @@
-'use client';
+"use client"
 
-import { authenticate } from '@/actions/auth';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { adminSignIn } from "@/actions/auth";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import Link from "next/link";
 
-const loginSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address' }),
-  password: z
-    .string()
-    .min(6, { message: 'Password must be at least 6 characters' }),
-});
-
-export default function Auth() {
-  const form = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
-
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const onSubmit = async ({ email, password }: z.infer<typeof loginSchema>) => {
-    setIsAuthenticating(true);
-
-    try {
-      await authenticate(email, password);
-      router.push('/admin');
-    } catch (error: Error | unknown) {
-      form.setError('root', { 
-      message: error instanceof Error 
-        ? error.message 
-        : 'Wrong email or password. Please try again.' 
-      });
-    } finally {
-      setIsAuthenticating(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form submitted");
+    setLoading(true);
+    const { error } = await adminSignIn(email, password);
+    if (error) {
+      toast.error(error);
+    } else {
+      toast.success("Logged in successfully!");
+      router.push("/admin/dashboard");
     }
+    setLoading(false);
   };
 
   return (
-    <div className='flex h-svh items-center justify-center'>
-      <div className='mx-auto grid w-[350px] gap-6'>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='grid gap-4'>
-            <FormField
-              control={form.control}
-              name='email'
-              render={({ field }) => (
-                <FormItem className='grid gap-2'>
-                  <FormLabel htmlFor='email'>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      id='email'
-                      type='email'
-                      placeholder='m@example.com'
-                      {...field}
-                      disabled={isAuthenticating}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+    <div className="flex min-h-screen items-center justify-center bg-zinc-900 text-white">
+      <div className="w-full max-w-md p-8 space-y-6 bg-zinc-800 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold text-center">Admin Login</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="m@example.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="bg-zinc-700 border-zinc-600"
             />
-            <FormField
-              control={form.control}
-              name='password'
-              render={({ field }) => (
-                <FormItem className='grid gap-2'>
-                  <div className='flex items-center'>
-                    <FormLabel htmlFor='password'>Password</FormLabel>
-                  </div>
-                  <FormControl>
-                    <Input
-                      disabled={isAuthenticating}
-                      id='password'
-                      type='password'
-                      {...field}
-                    />
-                  </FormControl>{' '}
-                  <FormMessage />
-                </FormItem>
-              )}
+          </div>
+          <div>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="bg-zinc-700 border-zinc-600"
             />
-            <Button
-              disabled={isAuthenticating}
-              type='submit'
-              className='w-full'
-            >
-              Login
-            </Button>
-          </form>
-        </Form>
+          </div>
+          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </Button>
+        </form>
+        <p className="text-center">
+          Don't have an account?{" "}
+          <Link href="/auth/admin/signup" className="text-blue-500 hover:underline">
+            Sign Up
+          </Link>
+        </p>
       </div>
     </div>
   );

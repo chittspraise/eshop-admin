@@ -22,15 +22,15 @@ export const ProductTableRow = ({
   setCurrentProduct,
   setIsDeleteModalOpen,
 }: Props) => {
-  const handleEditClick = (product: CreateOrUpdateProductSchema) => {
+  const handleEditClick = (productArg: CreateOrUpdateProductSchema) => {
     setCurrentProduct({
-      title: product.title,
-      category: product.category,
-      price: product.price,
-      description: product.description, // Added description
-      heroImage: product.heroImage,
-      images: product.images,
-      slug: product.slug,
+      title: productArg.title,
+      category: productArg.category,
+      price: productArg.price,
+      description: productArg.description, // Added description
+      heroImage: productArg.heroImage,
+      images: productArg.images,
+      slug: productArg.slug,
       intent: 'update',
     });
     setIsProductModalOpen(true);

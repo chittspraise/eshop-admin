@@ -4,8 +4,8 @@ export const createOrUpdateProductSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
   price: z.string().min(1, { message: "Price is required" }),
   category: z.string().min(1, { message: "Category is required" }),
-  description: z.string().min(1, { message: "Description is required" }), // ✅ Added description
-  heroImage: z.any().refine(file => file.length === 1, "Hero image is required"),
+  description: z.string().min(1, { message: "Description is required" }),
+  heroImage: z.any().refine((file) => file?.length === 1, "Hero image is required"),
   images: z
     .any()
     .refine(
@@ -29,7 +29,7 @@ export const createProductSchemaServer = z.object({
   title: z.string().min(1, { message: "Title is required" }),
   price: z.number().positive({ message: "Price is required" }),
   category: z.number().positive({ message: "Category is required" }),
-  description: z.string().min(1, { message: "Description is required" }), // ✅ Added description
+  description: z.string().min(1, { message: "Description is required" }),
   heroImage: z.string().url({ message: "Hero image is required" }),
   images: z.array(z.string().url({ message: "Images are required" })),
 });

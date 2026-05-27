@@ -9,6 +9,7 @@ import {
 } from '@/app/admin/categories/create-category.schema';
 import { createClient } from '@/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { ADMIN } from '@/constants/constants';
 
 export const getCategoriesWithProducts =
   async (): Promise<CategoriesWithProductsResponse> => {
@@ -57,10 +58,29 @@ export const imageUploadHandler = async (formData: FormData) => {
   }
 };
 
+const checkAdmin = async () => {
+  const supabase = await createClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    throw new Error('You must be logged in to perform this action');
+  }
+
+  const { data: userData, error: userError } = await supabase
+    .from('users')
+    .select('type')
+    .eq('id', authData.user.id)
+    .single();
+
+  if (userError || userData?.type?.toUpperCase() !== ADMIN) {
+    throw new Error('Access denied: Only admins can perform this action');
+  }
+};
+
 export const createCategory = async ({
   imageUrl,
   name,
 }: CreateCategorySchemaServer) => {
+  await checkAdmin();
   const supabase = await createClient();
   const slug = slugify(name, { lower: true });
 
@@ -82,6 +102,7 @@ export const updateCategory = async ({
   name,
   slug,
 }: UpdateCategorySchema) => {
+  await checkAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('category')
@@ -96,6 +117,7 @@ export const updateCategory = async ({
 };
 
 export const deleteCategory = async (id: number) => {
+  await checkAdmin();
   const supabase = await createClient();
   const { error } = await supabase.from('category').delete().match({ id });
 

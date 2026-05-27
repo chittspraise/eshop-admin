@@ -107,7 +107,7 @@ export const ProductForm = ({
                   <FormItem className='flex flex-col'>
                     <FormLabel>Category</FormLabel>
                     <FormControl>
-                      <Select onValueChange={field.onChange}>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
                         <SelectTrigger
                           disabled={isSubmitting}
                           className='col-span-3'
@@ -180,7 +180,7 @@ export const ProductForm = ({
                         accept='image/*'
                         {...form.register('heroImage')}
                         onChange={event => {
-                          field.onChange(event.target.files?.[0]);
+                          field.onChange(event.target.files);
                         }}
                         disabled={isSubmitting}
                       />

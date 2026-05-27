@@ -102,7 +102,7 @@ export const CategoryTableRow = ({
                             {product.title}
                           </h3>
                           <p className='text-sm text-muted-foreground'>
-                            {product.maxQuantity} in stock
+                            {product.price}
                           </p>
                         </div>
                       </div>
