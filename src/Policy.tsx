@@ -1,47 +1,70 @@
 import React from 'react';
+import Link from 'next/link';
 
 const PrivacyPolicy: React.FC = () => {
     return (
-        <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-            <h1>Privacy Policy</h1>
-            <p>
-                Welcome to our grocery store app. Your privacy is important to us, and we are committed to protecting your personal information. This Privacy Policy outlines how we collect, use, and safeguard your data.
-            </p>
+        <div className="min-h-screen bg-black text-white px-4 py-12 md:px-8">
+            <div className="max-w-4xl mx-auto space-y-8 bg-zinc-950 p-6 md:p-10 rounded-2xl border border-zinc-800 shadow-xl">
+                <div className="border-b border-zinc-800 pb-6">
+                    <Link href="/" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors inline-block mb-3">
+                        ← Back to Home
+                    </Link>
+                    <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">Privacy Policy</h1>
+                    <p className="text-sm text-zinc-400 mt-2">Last Updated: October 2026</p>
+                </div>
 
-            <h2>Information We Collect</h2>
-            <ul>
-                <li>Personal information such as your name, email address, and phone number when you register or place an order.</li>
-                <li>Payment information to process your transactions securely.</li>
-                <li>Usage data, including app interactions and preferences, to improve your experience.</li>
-            </ul>
+                <div className="space-y-6 text-zinc-300 leading-relaxed text-sm md:text-base">
+                    <section className="space-y-2">
+                        <p>
+                            Welcome to <strong className="text-white">eShop</strong> (Proudchitts Inc.). Your privacy is critical to us, and we are committed to safeguarding your personal data and maintaining full transparency.
+                        </p>
+                    </section>
 
-            <h2>How We Use Your Information</h2>
-            <ul>
-                <li>To process and deliver your orders.</li>
-                <li>To provide customer support and respond to inquiries.</li>
-                <li>To improve our app and personalize your experience.</li>
-                <li>To send promotional offers and updates, if you opt-in.</li>
-            </ul>
+                    <section className="space-y-3">
+                        <h2 className="text-xl font-bold text-white">1. Information We Collect</h2>
+                        <ul className="list-disc pl-6 space-y-2">
+                            <li><strong className="text-white">Personal Information:</strong> Name, email address, phone number, and recipient delivery address provided during registration or checkout.</li>
+                            <li><strong className="text-white">Payment Details:</strong> Secure transaction references processed via PCI-DSS compliant payment gateways (Paystack). eShop does not store raw credit/debit card numbers or CVVs on its servers.</li>
+                            <li><strong className="text-white">Location Data:</strong> Geolocation coordinates used solely to locate nearby registered partner stores and calculate accurate delivery distances.</li>
+                        </ul>
+                    </section>
 
-            <h2>Data Security</h2>
-            <p>
-                We implement industry-standard security measures to protect your data. However, no method of transmission over the internet or electronic storage is 100% secure, and we cannot guarantee absolute security.
-            </p>
+                    <section className="space-y-3">
+                        <h2 className="text-xl font-bold text-white">2. How We Use Your Information</h2>
+                        <ul className="list-disc pl-6 space-y-2">
+                            <li>To route, fulfill, and deliver orders to your chosen recipient via our partner network.</li>
+                            <li>To send transaction receipts, order status updates, and digital pickup codes via WhatsApp or SMS.</li>
+                            <li>To process refunds, prevent fraudulent transactions, and resolve customer support inquiries.</li>
+                        </ul>
+                    </section>
 
-            <h2>Your Rights</h2>
-            <p>
-                You have the right to access, update, or delete your personal information. If you wish to exercise these rights, please contact us at support@grocerystoreapp.com.
-            </p>
+                    <section className="space-y-3">
+                        <h2 className="text-xl font-bold text-white">3. Data Protection & Security</h2>
+                        <p>
+                            We employ industry-standard encryption, SSL transmission, and secure row-level database access policies to protect all user accounts and transaction records.
+                        </p>
+                    </section>
 
-            <h2>Changes to This Policy</h2>
-            <p>
-                We may update this Privacy Policy from time to time. Any changes will be posted on this page, and we encourage you to review it periodically.
-            </p>
+                    <section className="space-y-3">
+                        <h2 className="text-xl font-bold text-white">4. Related Policies</h2>
+                        <p>
+                            For full details regarding order dispatch, shipping, cancellations, and returns, please review our{' '}
+                            <Link href="/TermsAndCondition" className="text-emerald-400 underline">Terms and Conditions</Link> and{' '}
+                            <Link href="/RefundPolicy" className="text-emerald-400 underline">Refund & Cancellation Policy</Link>.
+                        </p>
+                    </section>
 
-            <h2>Contact Us</h2>
-            <p>
-                If you have any questions about this Privacy Policy, please contact us at support@grocerystoreapp.com.
-            </p>
+                    <section className="space-y-3 border-t border-zinc-800 pt-6">
+                        <h2 className="text-xl font-bold text-white">5. Contact Us</h2>
+                        <p>If you have any questions or requests regarding your personal information, contact our privacy officer:</p>
+                        <div className="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 space-y-1">
+                            <p><strong className="text-white">Company:</strong> eShop (Proudchitts Inc.)</p>
+                            <p><strong className="text-white">Email:</strong> <a href="mailto:eshop@gmail.com" className="text-emerald-400 underline">eshop@gmail.com</a></p>
+                            <p><strong className="text-white">Support & WhatsApp:</strong> <a href="tel:+27789857143" className="text-emerald-400 underline">+27 789 857 143</a></p>
+                        </div>
+                    </section>
+                </div>
+            </div>
         </div>
     );
 };
